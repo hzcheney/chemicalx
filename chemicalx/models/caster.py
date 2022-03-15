@@ -103,7 +103,7 @@ class CASTER(Model):
         :return: sparse code X_o: (batch_size x drug_channels)
         """
         dict_feat_squared = torch.matmul(dictionary_features_latent, dictionary_features_latent.transpose(2, 1))
-        dict_feat_squared_inv = torch.inverse(dict_feat_squared + self.lambda3 * (torch.eye(self.drug_channels)))
+        dict_feat_squared_inv = torch.inverse(dict_feat_squared + self.lambda3 * (torch.eye(self.drug_channels, device=drug_pair_features_latent.device)))
         dict_feat_closed_form = torch.matmul(dict_feat_squared_inv, dictionary_features_latent)
         r = drug_pair_features_latent[:, None, :].matmul(dict_feat_closed_form.transpose(2, 1)).squeeze(1)
         return r
@@ -121,7 +121,7 @@ class CASTER(Model):
                 drug_pair_features: a copy of the input unpacked drug_pair_features (needed for loss calculation)
         """
         drug_pair_features_latent = self.encoder(drug_pair_features)
-        dictionary_features_latent = self.encoder(torch.eye(self.drug_channels))
+        dictionary_features_latent = self.encoder(torch.eye(self.drug_channels, device=drug_pair_features.device))
         dictionary_features_latent = dictionary_features_latent.mul(drug_pair_features[:, :, None])
         drug_pair_features_reconstructed = self.decoder(drug_pair_features_latent)
         reconstructed = torch.sigmoid(drug_pair_features_reconstructed)
